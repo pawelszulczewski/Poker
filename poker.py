@@ -1,10 +1,13 @@
 import random
 from functools import total_ordering
-
+import os
+def clear(prompt):
+	input(prompt)
+	os.system('cls')
 faces = {'2':2,'3':3,'4':4,'5':5,'6':6, '7':7,'8':8,'9':9,'T':10,'J':11,'Q':12,'K':13,'A':14}
 rev_faces = {y:x for x,y in faces.items()}
 suits = ['S','C','D','H']
-s_score = {'S':'Spades','C':'Clubs','D':'Diamonds','H':'Hearts'}
+rev_suits = {'S':'Spades','C':'Clubs','D':'Diamonds','H':'Hearts'}
 scores = {1:'a highest card',2:'a pair',3:'two pairs',4:'three-of-a-kind',5:'a straight',6:'a flush',7:'a fullhouse',8:'four-of-a-kind',9:'a straight-flush'}
 
 class game(object):
@@ -12,34 +15,48 @@ class game(object):
 		self.players = players
 		self.deck = deck
 		self.discard = discard
-	def winner(self,players):
+		self.gameNum = 0
+	def interpret_score(self,score):
+		if score[0] != 6:
+			out = scores[score[0]]+" of "+str(rev_faces[score[1]])
+		else:
+			out = scores[score[0]]+" of "+str(rev_suits[score[1]])
+		return (out)
+
+	def winner(self):
 		results = {}
-		for player in players:
+		for player in self.players:
 			self.scorer = scorer(player)
-			results[player.name] = (self.scorer.result())
+			results[player] = (self.scorer.result())
+			player.add_result((results[player],self.gameNum))
 		score = sorted([(value,key) for (key,value) in results.items()])
 		score.reverse()
 		winscore = score[0]
-		if winscore[0][0] != 6:
-			out = "Winner is " + winscore[1]+" with "+ scores[winscore[0][0]]+" of "+str(rev_faces[winscore[0][1]])
-		else:
-			out = "Winner is " + winscore[1]+" with "+ s_scores[winscore[0][0]]+" of "+str(rev_faces[winscore[0][1]])
-		return (out)
+		winplayer = winscore[1]
+		winplayer.add_win(1)
+		print ("Winner is " + str(winplayer)+" with "+ self.interpret_score(winscore[0]))
 	def replace(self,player,cards):
 		for i in cards:
 			player.discard(self.discard,int(i)-1)
 			player.insert(self.deck, int(i)-1)
 		print(player)
+	def show_scores(self):
+		for player in self.players:
+			print(player.name + " has won " +str(player.get_wins()) + " game(s). Best was game "+ str(player.best_game()[1]) + " (" +self.interpret_score(player.best_game()[0]) +")")
+
 	def play(self):
+		self.gameNum += 1
 		for player in players:
+			clear(player.name+", Press enter to begin your turn")
 			player.draw(deck,5)
 			print(player)
-			to_replace = input(player.name+", Enter the number of the cards you wish to replace(seperate with commas): ")
+			to_replace = input(player.name+", Enter the number of the cards you wish to replace(seperate with commas): \n")
 			to_replace = to_replace.split(',')
 			if (to_replace) != [""]:
 				self.replace(player,to_replace)
 			print('\n')
-		print(self.winner(self.players))
+			clear(player.name+", Press enter to end your turn")
+		self.winner()
 		for player in players:
 			player.clear(self.discard)
 
@@ -130,6 +147,9 @@ class Deck(object):
 	def __init__(self,discard=False):
 		self.discard = discard
 		self.new_deck()
+	def __iter__(self):
+		for card in self.cards:
+			yield (card)
 	def draw(self,n):
 		self.drawn = []
 		for i in range(n):
@@ -153,6 +173,7 @@ class Deck(object):
 class Player(object):
 	def __init__(self,name):
 		self.hand = []
+		self.history = []
 		self.name = name
 		self.wins = 0
 	def draw(self,deck,num):
@@ -171,6 +192,12 @@ class Player(object):
 			self.discard(discard,0)
 	def add_win(self,n):
 		self.wins += n 
+	def get_wins(self):
+		return(self.wins)
+	def best_game(self):
+		return(sorted(self.history)[-1])
+	def add_result(self,r):
+		self.history.append(r)
 	def order(self):
 		self.hand.sort()
 
@@ -190,3 +217,4 @@ while playing[0] == 'Y' or playing[0] == 'y':
 	deck.new_deck()
 	g1.play()
 	playing = (input("Do you wish to play again? "))
+g1.show_scores()
