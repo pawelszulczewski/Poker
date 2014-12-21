@@ -200,8 +200,7 @@ class Player(object):
 		self.history.append(r)
 	def order(self):
 		self.hand.sort()
-
-
+played = 0
 deck = Deck()
 discard = Deck(discard=True)
 playing = (input("Do you wish to play? (Y/n) "))
@@ -212,9 +211,14 @@ if playing[0] == 'Y' or playing[0] == 'y':
 		names = input("Enter player names (seperate with commas) ").split(',')
 	players = [Player(name) for name in names]
 	g1 = game(players,deck,discard)
+	played = 1
 while playing[0] == 'Y' or playing[0] == 'y':
 	print("Shuffling deck",'\n')
 	deck.new_deck()
 	g1.play()
 	playing = (input("Do you wish to play again? "))
-g1.show_scores()
+if played > 0:
+        g1.show_scores()
+else:
+        print ("Good bye!")
+
