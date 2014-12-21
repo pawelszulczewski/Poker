@@ -3,7 +3,7 @@ from functools import total_ordering
 import os
 def clear(prompt):
 	input(prompt)
-	os.system('cls')
+	os.system('cls' if os.name == 'nt' else 'clear')        
 faces = {'2':2,'3':3,'4':4,'5':5,'6':6, '7':7,'8':8,'9':9,'T':10,'J':11,'Q':12,'K':13,'A':14}
 rev_faces = {y:x for x,y in faces.items()}
 suits = ['S','C','D','H']
